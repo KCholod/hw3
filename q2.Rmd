@@ -1,0 +1,15 @@
+In this question you will fit various spline models to the fossil data (in "fossil.csv") of Chaud-huri and Marron (1999). These data consist of 106 measurements of ratios of strontium isotopes found in fossil shells and their ages.
+
+(a) Fit a polynomial function, using 5 fold cross-validation for choosing the degree of the polynomial. Report the selected model.
+
+
+(b) Fit a natural cubic spline, using 5 fold cross-validation for choosing the degrees of freedom. Report the degrees of freedom of the chosen model.
+
+
+(c) Fit a smoothing spline, using 5 fold cross-validation for choosing the tuning parameter. Report the degrees of freedom of the chosen model.
+
+
+(d) Fit a local linear regression, using 5 fold cross-validation for choosing the tuning parameter. Report the corresponding degrees of freedom of the chosen model.
+
+
+(e) Make a scatterplot of the data, superimposed with the fitted curves by (a), (b), (c) and (d). Compare and discuss the fitted models.
