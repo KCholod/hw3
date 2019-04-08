@@ -10,14 +10,16 @@ income <- read_csv("http://www-bcf.usc.edu/~gareth/ISL/Income2.csv")
 Suppose we have the model
 $$
     y_i=\beta_0 + f_1(x_{i1}) + f_2(x_{i2}) + \varepsilon.
-$$$
+$$
 where $y_i$ is `Income`, $x_{i1}$ is `Education` and $x_{i2} = $`Seniority`.
 
 (a) Suppose $f_1$ and $f_2$ are linear. Fit a multiple linear regression model to the data. 
 Denote the estimate of $f_1$ as $\hat f_1$. (You should center the function $\hat f_1$)
 
 
+
 (b) Compute the partial residual $z_{1i} = y_i -  \hat f_1(x_{1i})$ and plot $z_{1i}$ vs $x_{2i}$. Then fit a smoothing spline on the scatter plot. Denote the centered estimated smooth function as $\hat f_2$.
+
 
 
 (c) Compute the partial residual $z_{2i} = y_i - \hat f_2(x_{2i})$ and plot $z_{2i}$ vs $x_{1i}$. Then fit a smoothing spline on the scatter plot. Denote the centered estimated smooth function as $\hat f_1$.
@@ -27,3 +29,5 @@ Denote the estimate of $f_1$ as $\hat f_1$. (You should center the function $\ha
 
 
 (e) On this data set, how many backfitting iterations were required in order to obtain a good result? Plot the function $\hat f_1(x_{1})+\hat f_2(x_2)$ over the a grid of $X_1$ and $X_2$.
+
+
