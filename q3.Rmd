@@ -7,12 +7,58 @@ head(College)
 ```
 
 (a)  Split the data into a training set and a test set. Using out-of-state tuition as the response and the other variables as the predictors, perform forward stepwise selection on the training set in order to identify a satisfactory model that uses just a subset of the predictors.
+```{r}
+library(data.table)
+library(leaps)
+set.seed(1)
+dt <- data.table(College)
+n <- length(dt$Outstate)
+train <- sample(n, n/2)
+dt.train <- College[train, ] %>% data.table()
+dt.test <- College[-train, ] %>% data.table()
+reg.fit <- regsubsets(Outstate ~ ., data = dt.train, nvmax = 17, method = "forward")
+reg.summary <- summary(reg.fit)
+ggplot(data.frame(cp =reg.summary$cp, nrVar=1:17), aes(x=nrVar, y=cp))+xlab("Number of Variables") + ylab("Cp") + geom_line()
+which.min(reg.summary$cp)
+ggplot(data.frame(bic =reg.summary$bic, nrVar=1:17), aes(x=nrVar, y=bic))+xlab("Number of Variables") + ylab("BIC") + geom_line()
+which.min(reg.summary$bic)
+ggplot(data.frame(adjr2 =reg.summary$adjr2, nrVar=1:17), aes(x=nrVar, y=adjr2))+xlab("Number of Variables") + ylab("adjr2") + geom_line()
+which.max(reg.summary$adjr2)
+co <- coef(reg.fit, id = 6)
+names(co)
+```
 
 
 (b) Fit a GAM on the training data, using out-of-state tuition as the response and the features selected in the previous step as the predictors. Plot the results, and explain your findings.
 
+```{r}
+library(gam)
+gam.fit <- gam(Outstate ~ Private + s(Room.Board, df = 2) + s(PhD, df = 2) + 
+    s(perc.alumni, df = 2) + s(Expend, df = 2) + s(Grad.Rate, df = 2), data = dt.train)
+par(mfrow = c(2, 3))
+plot(gam.fit, se = T, col = "red")
+par(mfrow = c(1, 1))
+```
+
+So the GAM function models the data relatively well, and appears to be the best for Room.Board, perc.alumni, and Expend. 
 
 (c) Evaluate the model obtained on the test set, and explain the results obtained.
 
+```{r}
+gam.pred <- predict(gam.fit, dt.test)
+gam.err <- mean((dt.test$Outstate - gam.pred)^2)
+gam.err
+lm.pred <- predict(lm(Outstate~Private+Room.Board+PhD+perc.alumni+Expend+Grad.Rate, data = dt.train), dt.test)
+lm.err <- mean((dt.test$Outstate - lm.pred)^2)
+lm.err
+```
+
+We get higher RSS when using the linear model, so the GAM model is better
+
 
 (d) For which variables, if any, is there evidence of a non-linear relationship with the response?
+
+```{r}
+summary(gam.fit)
+```
+The summary shows a strong non-linear relationship between Expend and Outstate. It also shows a non-linear relationship between PhD and Outstate.

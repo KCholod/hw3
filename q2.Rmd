@@ -1,15 +1,142 @@
 In this question you will fit various spline models to the fossil data (in "fossil.csv") of Chaud-huri and Marron (1999). These data consist of 106 measurements of ratios of strontium isotopes found in fossil shells and their ages.
 
+```{r}
+library(splines)
+library(gam)
+library(ISLR)
+library(tidyverse)
+fossil <- read_csv(file = "fossil.csv")
+```
+
+
 (a) Fit a polynomial function, using 5 fold cross-validation for choosing the degree of the polynomial. Report the selected model.
 
+```{r}
+library(rsample)
+folds <- vfold_cv(fossil, 5)
+folds %>% mutate(fits = splits %>% map(~lm(age ~ poly(strontium.ratio, 2), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds2 <- vfold_cv(fossil, 5)
+folds2 %>% mutate(fits = splits %>% map(~lm(age ~ poly(strontium.ratio, 3), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+folds3 <- vfold_cv(fossil, 5)
+folds3 %>% mutate(fits = splits %>% map(~lm(age ~ poly(strontium.ratio, 4), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds4 <- vfold_cv(fossil, 5)
+folds4 %>% mutate(fits = splits %>% map(~lm(age ~ poly(strontium.ratio, 5), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds5 <- vfold_cv(fossil, 5)
+folds5 %>% mutate(fits = splits %>% map(~lm(age ~ poly(strontium.ratio, 6), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+```
+A fourth-degree polynomial yields the lowest MSE. 
 
 (b) Fit a natural cubic spline, using 5 fold cross-validation for choosing the degrees of freedom. Report the degrees of freedom of the chosen model.
 
+```{r}
+library(rsample)
+library(dplyr)
+folds <- vfold_cv(fossil, 5)
+folds %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 1), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds1 <- vfold_cv(fossil, 5)
+folds1 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 2), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds2 <- vfold_cv(fossil, 5)
+folds2 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 3), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds3 <- vfold_cv(fossil, 5)
+folds3 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 4), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds4 <- vfold_cv(fossil, 5)
+folds4 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 5), data = analysis(.)))) %>%         mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds5 <- vfold_cv(fossil, 5)
+folds5 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 6), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds6 <- vfold_cv(fossil, 5)
+folds6 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 7), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds7 <- vfold_cv(fossil, 5)
+folds7 %>% mutate(fits = splits %>% map(~ lm(age ~ ns(strontium.ratio, df = 8), data = analysis(.)))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+```
+So 7 degrees of freedom yields the lowest MSE.
 
 (c) Fit a smoothing spline, using 5 fold cross-validation for choosing the tuning parameter. Report the degrees of freedom of the chosen model.
+
+```{r}
+fit_smooth <- smooth.spline(fossil$strontium.ratio, fossil$age, cv = TRUE, df = 6)
+```
 
 
 (d) Fit a local linear regression, using 5 fold cross-validation for choosing the tuning parameter. Report the corresponding degrees of freedom of the chosen model.
 
+```{r}
+folds <- vfold_cv(fossil, 5)
+folds %>% mutate(fits = splits %>% map(~loess(strontium.ratio ~ age, data = analysis(.), span = 1))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds1 <- vfold_cv(fossil, 5)
+folds1 %>% mutate(fits = splits %>% map(~loess(strontium.ratio ~ age, data = analysis(.), span = 2))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds2 <- vfold_cv(fossil, 5)
+folds2 %>% mutate(fits = splits %>% map(~loess(strontium.ratio ~ age, data = analysis(.), span = 3))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds3 <- vfold_cv(fossil, 5)
+folds3 %>% mutate(fits = splits %>% map(~loess(strontium.ratio ~ age, data = analysis(.), span = 4))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+
+folds4 <- vfold_cv(fossil, 5)
+folds4 %>% mutate(fits = splits %>% map(~loess(strontium.ratio ~ age, data = analysis(.), span = 5))) %>%
+        mutate(mses = map2_dbl(splits, fits, ~ modelr::mse(.y, assessment(.x)))) %>%
+        summarize(sum(mses))
+```
+1 degree of freedom yielded the smallest MSE. 
+
 
 (e) Make a scatterplot of the data, superimposed with the fitted curves by (a), (b), (c) and (d). Compare and discuss the fitted models.
+
+```{r}
+poly_fit <- lm(age ~ poly(strontium.ratio, 5), data = fossil)
+nat_fit <- lm(age ~ ns(strontium.ratio, df = 3), data = fossil)
+lin_fit <- loess(strontium.ratio ~ age, data = fossil, span = 1)
+ggplot(fossil) + geom_point(aes(strontium.ratio, age))
+par(new = TRUE)
+plot(poly_fit, col = "blue")
+par(new = TRUE)
+plot(nat_fit, col = "orange")
+par(new = TRUE)
+plot(lin_fit, col = "red")
+```
+
+
+The best fit is the cubic spline 

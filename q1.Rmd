@@ -9,24 +9,108 @@ head(College)
 
 (a) Split the data set into a training set and a test set.
 
+```{r}
+set.seed(1)
+train=sample(c(TRUE,FALSE),nrow(College),rep=TRUE)
+test=(!train)
+College.train=College[train,,drop=F]
+College.test=College[test,,drop=F]
+```
+
+
 
 (b) Fit a linear model using least squares on the training set, and
 report the test error obtained.
 
+```{r}
+lm.fit <- lm(Apps~.,data=College.train)
+summary(lm.fit)
+pred=predict(lm.fit,College.test)
+rss=sum((pred-College.test$Apps)^2)
+tss=sum((College.test$Apps-mean(College.test$Apps))^2)
+test.rsq=1-(rss/tss)
+test.rsq
+```
+R^2 is about .9052 for a linear model
+
 
 (c) Fit a ridge regression model on the training set, with $\lambda$ chosen
 by cross-validation. Report the test error obtained.
+
+```{r}
+library(glmnet)
+College.train.X=scale(model.matrix(Apps~.,data=College.train)[,-1],scale=T,center=T)
+College.train.Y=College.train$Apps
+College.test.X=scale(model.matrix(Apps~.,data=College.test)[,-1],
+      attr(College.train.X,"scaled:center"),
+      attr(College.train.X,"scaled:scale"))
+College.test.Y=College.test$Apps
+cv.out=cv.glmnet(College.train.X,College.train.Y,alpha=0)
+bestlam=cv.out$lambda.min
+bestlam
+lasso.mod=glmnet(College.train.X,College.train.Y,alpha=0,lambda=bestlam)
+pred=predict(lasso.mod,College.test.X,s=bestlam)
+rss=sum((pred-College.test$Apps)^2)
+tss=sum((College.test$Apps-mean(College.test$Apps))^2)
+test.rsq=1-(rss/tss)
+test.rsq
+```
+R^2 is .8387 for a ridge regression model 
 
 
 (d) Fit a lasso model on the training set, with $\lambda$ chosen by cross-validation.
 Report the test error obtained, along with the number of non-zero coefficient
 estimates.
 
+```{r}
+cv.out=cv.glmnet(College.train.X,College.train.Y,alpha=1)
+bestlam=cv.out$lambda.min
+bestlam
+lasso.mod=glmnet(College.train.X,College.train.Y,alpha=1,lambda=bestlam)
+pred=predict(lasso.mod,College.test.X,s=bestlam)
+rss=sum((pred-College.test$Apps)^2)
+tss=sum((College.test$Apps-mean(College.test$Apps))^2)
+test.rsq=1-(rss/tss)
+test.rsq
+#Number of coefficients equal to 0
+sum(coef(lasso.mod)[,1]==0)
+names(coef(lasso.mod)[, 1][coef(lasso.mod)[, 1] == 0])
+```
+R^2 for a lasso model is .8995 with the three nonzero coefficients being Enroll, Terminal and S.F Ratio
+
 
 (e) Fit a PCR model on the training set, with $M$ chosen by cross-validation. Report the test error obtained, along with the value of $ selected by cross-validation.
 
+```{r}
+library(pls)
+set.seed(1)
+pcr.fit<- pcr(Apps~.,data=College.train, scale=TRUE, validation="CV")
+summary(pcr.fit) #lowest: M=17
+pred=predict(pcr.fit,College.test,ncomp=17)
+rss=sum((pred-College.test$Apps)^2)
+tss=sum((College.test$Apps-mean(College.test$Apps))^2)
+test.rsq=1-(rss/tss)
+test.rsq
+```
+
+R^2 for a PCR model is .9052
 
 (f) Fit a PLS model on the training set, with $M$ chosen by cross-validation. Report the test error obtained, along with the value of $ selected by cross-validation.
 
+```{r}
+library(pls)
+set.seed(1)
+pls.fit <- plsr(Apps~.,data=College.train, scale=TRUE, validation="CV")
+summary(pls.fit) #pretty much lowest at 9 comps, certainly closest to lowest there
+pred=predict(pls.fit,College.test,ncomp=9)
+rss=sum((pred-College.test$Apps)^2)
+tss=sum((College.test$Apps-mean(College.test$Apps))^2)
+test.rsq=1-(rss/tss)
+test.rsq
+```
+
+R^2 for a PLS model is .9035
 
 (g) Comment on the results obtained. How accurately can we predict the number of college applications received? Is there much difference among the test errors resulting from these five approaches?
+
+Least squares, PLS, lasso, and PCR performed the best. These methods ended up using basically the same underlying data, since the optimal PCR regression used the same number of variables. PLS was able to cut out a few things, chosing a model that used 9 of 17 components, and 83% of the variance, while performing nearly as well. Interestingly, the Lasso still performed pretty comparably: 0.8995 vs 0.9052. The lasso only set 3 variables to 0 (Enroll, Terminal, and S.F. Ratio). Most of the variables seem to contribute interesting information to the model. Ridge regression performed the poorest.
